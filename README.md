@@ -57,6 +57,36 @@ Next.js chooses strategies based on your code (e.g. `fetch` options, `dynamic` r
 
 Official: [Rendering](https://nextjs.org/docs/app/building-your-application/rendering).
 
+### CSR, SSR, SSG, and ISR (what’s the difference?)
+
+These four terms describe **when and where** your UI and data are produced. They come from classic React/Next.js teaching; the **App Router** still uses the same ideas but often expresses them with **Server Components**, **caching**, and **`revalidate`** instead of only `getStaticProps` / `getServerSideProps`.
+
+| Acronym | Name | When work runs | First HTML | Typical use |
+|--------|------|----------------|------------|-------------|
+| **CSR** | Client-Side Rendering | In the **browser** after JS loads | Shell or empty, then React paints | Highly interactive UIs, dashboards behind login |
+| **SSR** | Server-Side Rendering | On the **server per request** | Full HTML for that request | Personalized pages, data that must be fresh every time |
+| **SSG** | Static Site Generation | At **build** time (or when the page is pre-rendered) | Prebuilt HTML, same for everyone until rebuilt | Marketing pages, docs, blogs |
+| **ISR** | Incremental Static Regeneration | **Static** pages that **refresh** on a timer or on-demand | Like SSG, then updated in the background | Product catalogs, semi-fresh content without rebuilding the whole site |
+
+**CSR (Client-Side Rendering)**  
+The server sends JavaScript bundles; **React runs in the client** and often **fetches data in the browser** (`useEffect`, client fetch). The first meaningful paint may wait for JS. In Next.js, any **`"use client"`** component behaves like CSR for the parts that only run after hydration—but the App Router usually still sends **server-rendered HTML** for the initial load when parent Server Components exist.
+
+**SSR (Server-Side Rendering)**  
+For each request, the **server** runs your React tree (or RSC payload) and sends **fresh** output. Good for **always-fresh** or **user-specific** data. In the App Router, routes that are **dynamic** (e.g. use uncached `fetch`, cookies, or `headers`) behave like SSR for that segment.
+
+**SSG (Static Site Generation)**  
+Output is produced **ahead of time** and can be served from a CDN—very fast. In the App Router, this corresponds to routes that Next can **fully prerender** and cache as **static** (no per-request dynamic APIs in that path).
+
+**ISR (Incremental Static Regeneration)**  
+You keep the **speed of static** pages but allow them to **update** after a **`revalidate`** interval, or via **`revalidatePath`** / **`revalidateTag`** after a mutation—without redeploying the whole app. This is the bridge between “static” and “always live.”
+
+**How this maps to the App Router (mental model)**  
+- Default **Server Components** + static-friendly data → closer to **SSG** / **ISR** when cached and revalidated.  
+- Dynamic server work every time → closer to **SSR**.  
+- **`"use client"`** interactivity after load → **CSR**-style behavior for that subtree.  
+
+Official: [Rendering](https://nextjs.org/docs/app/building-your-application/rendering) · [Incremental Static Regeneration](https://nextjs.org/docs/app/building-your-application/data-fetching/incremental-static-regeneration).
+
 ### Data fetching in Server Components
 
 In the App Router, **`fetch` in Server Components** participates in Next.js **caching** (see `cache` and `next.revalidate` options). You can also read databases directly (as in this project’s `app/lib/data.ts`) because that code never ships to the browser.
