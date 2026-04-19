@@ -1,7 +1,9 @@
 import { auth } from "./auth"
 
-export const proxy = auth()
-export { proxy as default }
+// Export the middleware factory — do not call `auth()` here; that runs `headers()`
+// at module load. The default export is invoked once per request by Next.js.
+export default auth
+export { auth as proxy }
 export const config = {
   // https://nextjs.org/docs/app/api-reference/next-config-js/proxy#config
   matcher: [
